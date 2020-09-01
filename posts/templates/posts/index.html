@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    @keyframes hide {
+        0% 
+        {
+            opacity: 1;
+            height: 100%;
+            line-height: 100%;
+            padding: 20px;
+            margin-bottom: 10px;
+        }
+        75%
+        {
+            /*
+            op = 0, but don't shrink yet
+            */
+            opacity: 0;
+            heigth: 100%;
+            line-height: 100%;
+            padding: 20px;
+            margin-bottom: 10px
+        }
+        100%
+        {
+            opacity: 0;
+            heigth: 0px;
+            line-height: 0px;
+            padding: 0px;
+            margin-bottom: 0px;
+        }
+    }
+    .hide
+    {
+        position: absolute;
+        right: 30px;
+    }
+    .post
+    {
+        /*
+        add animation, but it won't yet play until user hits "hide" button
+        */
+        background-color: #77dd11;
+        padding: 20px;
+        margin-bottom: 10px;
+        animation-name: hide;
+        animation-duration: 2s;
+        animation-fill-mode: forwards;
+        animation-play-state: paused;
+
+    }
+    body{
+        padding-bottom: 50px;
+    }
+</style>
+<script>
+    //start with first post
+    let counter = 1;
+
+    //load posts 20 at a time
+    const quantity = 20;
+
+    //when DOM load, render the first 20 posts
+    document.addEventListener('DOMContentLoaded', load);
+
+    //If scrolled to bottom, load the next posts
+    window.onscroll = () =>
+    {
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight)
+        {
+            load();
+        }
+    }
+
+    //If hide button is clicked, delete the post
+    document.addEventListener('click', event => {
+        const element = event.target;
+        if (element.className === 'hide')
+        {
+            element.parentElement.style.animationPlayState = 'running';
+            element.parentElement.addEventListener('animationend', () =>
+            {
+                element.parentElement.remove();
+            })
+        }
+    })
+
+    //The load process for beginning and everytime 
+    //user scrolls to the end
+    function load()
+    {
+        //set start to the current counter val
+        const start = counter;
+        //counter + quantity is 1 more than 20, so subtract 1
+        const end = start + quantity - 1;
+        //next run will start at 21, 41, 61 and so on
+        counter = end + 1;
+
+        //get new posts and add posts
+        //through fetch API
+        fetch(`/posts?start=${start}&end=${end}`)
+        .then(response => response.json())
+        .then(data => {
+            data.posts.forEach(add_post);
+        })
+
+        //with JS
+        /*
+        
+        for (let i = start; i < end + 1; i++)
+        {
+            add_post(`Post: #${i}`);
+        }
+        */
+
+    }
+    function add_post(contents)
+    {
+        const div = document.createElement('div');
+        div.className = 'post';
+        div.innerHTML = `${contents} <button class="hide">Hide</button>`;
+
+        //Add post to DOM
+        document.querySelector('#posts').append(div);
+    }
+</script>
+<body>
+    <div id="posts">
+
+    </div>
+</body>
+</html>
